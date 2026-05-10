@@ -1,0 +1,6 @@
+{
+  "diagram-diagramly-ai": {
+    "command": "node",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/runtime/diagramly-ai-mcp/dist/index.js"]
+  }
+}

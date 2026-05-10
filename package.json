@@ -1,0 +1,30 @@
+{
+  "name": "diagram",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared Mermaid rendering core and plugin adapters for Claude Code and Codex.",
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "^11.12.0",
+    "mermaid": "^11.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "esbuild": "^0.27.2",
+    "puppeteer-core": "^23.11.1",
+    "typescript": "^6.0.3"
+  },
+  "scripts": {
+    "build": "pnpm --recursive run build",
+    "check": "pnpm --recursive run check",
+    "package": "pnpm build && node scripts/package-plugins.mjs",
+    "package:major": "pnpm build && node scripts/package-plugins.mjs --bump major",
+    "package:minor": "pnpm build && node scripts/package-plugins.mjs --bump minor",
+    "package:patch": "pnpm build && node scripts/package-plugins.mjs --bump patch",
+    "measure:latency": "pnpm build && node scripts/measure-latency.mjs",
+    "smoke:cloud-preview": "pnpm build && node scripts/smoke-cloud-preview.mjs",
+    "reset:codex-plugin-cache": "node scripts/reset-codex-plugin-cache.mjs",
+    "dev:diagramly-ai": "pnpm build && node packages/diagramly-ai-mcp/dist/index.js"
+  }
+}

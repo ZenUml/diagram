@@ -1,0 +1,19 @@
+{
+  "name": "diagram",
+  "owner": {
+    "name": "ZenUML"
+  },
+  "metadata": {
+    "description": "Marketplace for Mermaid diagram rendering plugins."
+  },
+  "plugins": [
+    {
+      "name": "diagram",
+      "source": "./plugins",
+      "description": "Generate, validate, and render Mermaid diagrams for Claude Code.",
+      "author": {
+        "name": "Kuma"
+      }
+    }
+  ]
+}

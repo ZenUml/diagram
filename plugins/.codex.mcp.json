@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "diagram-diagramly-ai": {
+      "command": "node",
+      "args": ["./runtime/diagramly-ai-mcp/dist/index.js"],
+      "cwd": "."
+    }
+  }
+}

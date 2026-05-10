@@ -1,0 +1,14 @@
+{
+  "name": "diagram",
+  "version": "0.1.0",
+  "description": "Mermaid-based diagram rendering plugin for Claude Code.",
+  "author": {
+    "name": "Kuma"
+  },
+  "homepage": "https://github.com/zenuml/diagram",
+  "repository": "https://github.com/zenuml/diagram",
+  "license": "MIT",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "keywords": ["mermaid", "diagram", "sequence", "flowchart", "class", "state"]
+}

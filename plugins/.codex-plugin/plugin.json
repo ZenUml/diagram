@@ -1,0 +1,24 @@
+{
+  "name": "diagram",
+  "version": "0.1.0",
+  "description": "Mermaid-based diagram rendering plugin for Codex.",
+  "author": {
+    "name": "Kuma"
+  },
+  "homepage": "https://github.com/zenuml/diagram",
+  "repository": "https://github.com/zenuml/diagram",
+  "license": "MIT",
+  "skills": "./skills/",
+  "mcpServers": "./.codex.mcp.json",
+  "keywords": ["mermaid", "diagram", "sequence", "flowchart", "class", "state"],
+  "interface": {
+    "displayName": "diagram",
+    "shortDescription": "Turn text into Mermaid diagrams",
+    "longDescription": "Generate, validate, and render Mermaid diagrams for Codex terminal and app environments.",
+    "developerName": "Kuma",
+    "category": "Productivity",
+    "websiteURL": "https://github.com/zenuml/diagram",
+    "brandColor": "#1F6FEB",
+    "screenshots": []
+  }
+}
