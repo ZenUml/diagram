@@ -9,11 +9,3 @@ tmp/
 .env.local
 .env.*.local
 !.env.example
-plugins/*/runtime/
-plugins/*/skills/
-!plugins/runtime/
-!plugins/runtime/**
-!plugins/runtime/node_modules/
-!plugins/runtime/node_modules/**
-!plugins/skills/
-!plugins/skills/**
