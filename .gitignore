@@ -9,3 +9,5 @@ tmp/
 .env.local
 .env.*.local
 !.env.example
+
+plugins/skills/**/*.cn.md

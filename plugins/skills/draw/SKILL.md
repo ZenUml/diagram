@@ -21,7 +21,7 @@ Use this skill when a visual model would clearly improve understanding, includin
 1. Draft Mermaid source from the user's request.
 2. Run the packaged diagram draw CLI, which validates before writing local files.
 3. If the CLI returns `ok: false`, repair the Mermaid once and run the draw CLI again.
-4. After local rendering succeeds, call the `create_diagramly_diagram` tool with the diagram source.
+4. After local rendering succeeds, call the `create_diagramly_diagram` tool with the Mermaid source.
 5. If `create_diagramly_diagram` returns `diagramly.status: "created"`, return the standard local report and include the Diagramly.ai `PreviewUrl`.
 6. If `create_diagramly_diagram` returns `diagramly.status: "authorization_required"`, first return the standard local report with `htmlPath`, `svgPath`, and `pngPath`, then ask whether the user wants to create a `https://diagramly.ai` online diagram for long-term storage and sharing.
    1. If the user confirms, call the `start_diagramly_auth` tool, show the returned `diagramly.loginUrl` (for example, `https://diagramly.ai/auth/device?code=ABCD-2345`), and immediately call the `complete_diagramly_auth` tool, waiting until it returns `diagramly.status: "authorized"` (user authorization succeeded) or reports an error/expiration.
