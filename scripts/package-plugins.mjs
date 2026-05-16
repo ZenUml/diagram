@@ -1,4 +1,5 @@
 import * as esbuild from "esbuild"
+import { spawn } from "node:child_process"
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { cp, mkdir, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
@@ -46,11 +47,14 @@ async function buildSharedRuntime(runtimeRoot, pluginVersion) {
 }
 
 async function copyMermaidCore(runtimeRoot) {
+  const mermaidCoreRuntimeDist = path.join(runtimeRoot, "mermaid-core", "dist")
+
   await cp(
     path.join(repoRoot, "packages", "mermaid-core", "dist"),
-    path.join(runtimeRoot, "mermaid-core", "dist"),
+    mermaidCoreRuntimeDist,
     { recursive: true }
   )
+  await formatGeneratedRuntimeJs(mermaidCoreRuntimeDist)
 }
 
 async function bundleDiagramlyAiMcp(runtimeRoot) {
@@ -82,6 +86,54 @@ async function bundleRuntimeEntry({ entryPoint, outfile, banner, format = "esm" 
     sourcemap: false,
     legalComments: "none",
     banner: banner ? { js: banner } : undefined,
+  })
+}
+
+async function formatGeneratedRuntimeJs(targetPath) {
+  const jsFiles = collectJavaScriptFiles(targetPath)
+  if (jsFiles.length === 0) {
+    return
+  }
+
+  const biomeBin = path.join(packageDirectory("@biomejs/biome"), "bin", "biome")
+  await runCommand(process.execPath, [biomeBin, "format", "--write", ...jsFiles])
+}
+
+function collectJavaScriptFiles(directory) {
+  const files = []
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name)
+
+    if (entry.isDirectory()) {
+      files.push(...collectJavaScriptFiles(entryPath))
+      continue
+    }
+
+    if (entry.isFile() && entry.name.endsWith(".js")) {
+      files.push(entryPath)
+    }
+  }
+
+  return files
+}
+
+async function runCommand(command, args) {
+  await new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: repoRoot,
+      stdio: "inherit",
+    })
+
+    child.on("error", reject)
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve()
+        return
+      }
+
+      reject(new Error(`${command} ${args.join(" ")} exited with code ${code ?? "unknown"}.`))
+    })
   })
 }
 

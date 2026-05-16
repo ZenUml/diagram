@@ -1,17 +1,15 @@
-import { escapeHtml } from "./diagnostics.js";
+import { escapeHtml } from "./diagnostics.js"
 export function buildHtmlDocument(svg, request, options) {
-    const title = request.title || "Diagram Preview";
-    const escapedSource = escapeHtml(request.source);
-    const downloadLinks = [
-        `<a class="button" href="diagram.svg" download="diagram.svg">Download SVG</a>`,
-        options.hasPng
-            ? `<a class="button" href="diagram.png" download="diagram.png">Download PNG</a>`
-            : "",
-        `<a class="button secondary" href="diagram.mmd" download="diagram.mmd">Download Mermaid</a>`
-    ]
-        .filter(Boolean)
-        .join("\n          ");
-    return `<!doctype html>
+  const title = request.title || "Diagram Preview"
+  const escapedSource = escapeHtml(request.source)
+  const downloadLinks = [
+    `<a class="button" href="diagram.svg" download="diagram.svg">Download SVG</a>`,
+    options.hasPng ? `<a class="button" href="diagram.png" download="diagram.png">Download PNG</a>` : "",
+    `<a class="button secondary" href="diagram.mmd" download="diagram.mmd">Download Mermaid</a>`,
+  ]
+    .filter(Boolean)
+    .join("\n          ")
+  return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -110,5 +108,5 @@ export function buildHtmlDocument(svg, request, options) {
     </main>
   </body>
 </html>
-`;
+`
 }

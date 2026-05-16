@@ -14,7 +14,7 @@ Use this skill alongside `draw` when the selected diagram type is `zenuml`.
 3. Draft the interaction in ZenUML syntax rather than Mermaid native `sequenceDiagram` syntax.
 4. Run the packaged diagram draw CLI described in the `draw` skill.
 5. If validation fails, repair the ZenUML once and run the draw CLI again.
-6. Use the local files returned by the draw CLI, then follow the Diagramly.ai creation and authorization flow described in the `draw` skill.
+6. Use the local files returned by the draw CLI, then follow the local reporting and optional Diagramly.ai upload flow described in the `draw` skill.
 
 ## Drafting rules
 

@@ -5,10 +5,7 @@ let zenumlEmbeddedCssCache
 export async function normalizeSvg(svg, options) {
   let normalizedSvg = normalizeRootSvgDimensions(svg)
   if (options.title && !normalizedSvg.includes("<title>")) {
-    normalizedSvg = normalizedSvg.replace(
-      /<svg([^>]*)>/,
-      `<svg$1><title>${escapeHtml(options.title)}</title>`
-    )
+    normalizedSvg = normalizedSvg.replace(/<svg([^>]*)>/, `<svg$1><title>${escapeHtml(options.title)}</title>`)
   }
   if (options.diagramType === "zenuml" && normalizedSvg.includes("<foreignObject")) {
     normalizedSvg = await inlineZenumlStyles(normalizedSvg)
@@ -116,10 +113,7 @@ async function inlineZenumlStyles(svg) {
   const foreignObjectStyleTag = `<style xmlns="http://www.w3.org/1999/xhtml" data-diagramly-zenuml-css="true">${cssCdata}</style>`
   let normalizedSvg = svg
   if (normalizedSvg.includes("</style>")) {
-    normalizedSvg = normalizedSvg.replace(
-      /<style>([\s\S]*?)<\/style>/,
-      `<style>${wrapSvgCdata(`$1\n${css}`)}</style>`
-    )
+    normalizedSvg = normalizedSvg.replace(/<style>([\s\S]*?)<\/style>/, `<style>${wrapSvgCdata(`$1\n${css}`)}</style>`)
   } else {
     normalizedSvg = normalizedSvg.replace(/<svg([^>]*)>/, `<svg$1><style>${cssCdata}</style>`)
   }
@@ -204,9 +198,5 @@ function extractCreateTextNodeStringArgument(bundleSource, literalStart) {
   }
 }
 function isZenumlInjectedCss(css) {
-  return (
-    css.includes("bg-skin-participant") &&
-    css.includes("text-skin-message") &&
-    css.includes("--color-border-base")
-  )
+  return css.includes("bg-skin-participant") && css.includes("text-skin-message") && css.includes("--color-border-base")
 }

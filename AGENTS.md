@@ -23,7 +23,7 @@
 
 ## Plugin Workflow Notes
 - Mermaid is the only supported diagram engine in this repo.
-- Pure TUI is the primary UX: Codex and Claude Code packaged draw CLIs return local `htmlPath`, `svgPath`, and `pngPath` outputs; after local success, `@diagramly-vibe/diagramly.ai` attempts Diagramly.ai creation and returns a `previewUrl` only when `diagramly.status: "created"`.
+- Pure TUI is the primary UX: Codex and Claude Code packaged draw CLIs return local `htmlPath`, `svgPath`, and `pngPath` outputs; after local success, `@diagramly-vibe/diagramly.ai` can create a Diagramly.ai online diagram on request and returns a `previewUrl` only when `diagramly.status: "created"`.
 - Keep the render summary text in a stable ASCII panel with fixed field order; do not drift back to ad hoc single-line resource dumps. Do not put `Diagnostics` inside boxed summaries; append diagnostics after the box only when present.
 - When plugin-facing files change, rerun `pnpm package` before testing.
 - Skill edits happen directly under `plugins/skills/`; there is no separate skill copy step during packaging.
@@ -34,7 +34,7 @@
 - `packages/mermaid-core` owns validation and rendering. It infers diagram type, validates Mermaid, renders SVG as canonical output, optionally exports PNG, writes deterministic output directories, and returns structured diagnostics.
 - `packages/diagramly-ai-mcp` owns Diagramly.ai device-token caching, pending authorization, and remote diagram creation.
 - Host metadata lives under `plugins/`. It should stay limited to plugin metadata, bootstrapping, packaged runtime payloads, and host-specific skills.
-- Default runtime flow is: draft Mermaid -> validate/render local files through `skills/draw/scripts/draw.js` -> attempt `create_diagramly_diagram` -> if it returns `diagramly.status: "authorization_required"`, return local files first and ask whether the user wants a Diagramly.ai online diagram for long-term storage and sharing -> on confirmation, call `start_diagramly_auth`, show `diagramly.loginUrl`, call `complete_diagramly_auth` until `diagramly.status: "authorized"` or error/expiration, then retry `create_diagramly_diagram`.
+- Default runtime flow is: draft Mermaid -> validate/render local files through `skills/draw/scripts/draw.js` -> return local files first -> tell the user Diagramly.ai upload is available for long-term storage and sharing -> only on request or confirmation, call `create_diagramly_diagram` -> if it returns `diagramly.status: "authorization_required"`, call `start_diagramly_auth`, show `diagramly.loginUrl`, call `complete_diagramly_auth` until `diagramly.status: "authorized"` or error/expiration, then retry `create_diagramly_diagram`.
 - `renderId` reuses unchanged local render outputs. For Diagramly.ai previews, `previewId` is the created diagram id.
 - The installable plugin root must ship plugin metadata, `runtime/`, and `skills/`.
 

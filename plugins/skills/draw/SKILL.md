@@ -5,50 +5,33 @@ description: Use when a visual model would help explain or communicate a request
 
 # Draw
 
-Use this skill when a visual model would clearly improve understanding, including requests about dependencies, call chains, architecture, workflows, state transitions, data models, or other relationships.
+Create Mermaid diagrams, validate them, and render local `htmlPath`, `svgPath`, and `pngPath` outputs. Diagramly.ai is an optional cloud upload path for users who want a shareable or long-lived online diagram after local rendering succeeds.
 
-## Choose the Mermaid type
+## Core flow
 
-- Use `zenuml` by default for sequence diagrams and interaction flows unless the user explicitly asks for Mermaid's native `sequenceDiagram` syntax.
-- Use `sequenceDiagram` only when the user explicitly requests it or provides existing `sequenceDiagram` source that should be preserved.
-- Use `flowchart` for process flow, branching logic, decision trees, or procedural steps.
-- Use `classDiagram` for entities, classes, properties, methods, and relationships.
-- Use `stateDiagram-v2` for lifecycle, status transitions, or finite state behavior.
-- Use other Mermaid diagram types when the request clearly fits them, including `erDiagram`, `journey`, `gantt`, `gitGraph`, `mindmap`, `timeline`, `architecture`, `kanban`, `packet`, `quadrantChart`, `xychart`, `sankey`, `venn`, `ishikawa`, `block`, `treemap`, `treeView-beta`, `wardley-beta`, and the `C4*` family.
+1. Select the Mermaid type from the request.
+2. Draft Mermaid source.
+3. Run the packaged draw CLI for local validation and rendering.
+4. If the CLI returns `ok: false`, repair the Mermaid once and run the draw CLI again.
+5. If local rendering succeeds, return the local render report using the CLI-provided `displayText` when present.
+6. After reporting local files, tell the user that Diagramly.ai upload is available for sharing and long-term storage.
+7. Only create a Diagramly.ai online diagram when the user asks for upload, sharing, saving online, a preview URL, or confirms the offered option.
 
-## Workflow
+Do not skip local validation unless the user explicitly asks for raw Mermaid only. Do not attempt Diagramly.ai upload if local rendering failed.
 
-1. Draft Mermaid source from the user's request.
-2. Run the packaged diagram draw CLI, which validates before writing local files.
-3. If the CLI returns `ok: false`, repair the Mermaid once and run the draw CLI again.
-4. After local rendering succeeds, call the `create_diagramly_diagram` tool with the Mermaid source.
-5. If `create_diagramly_diagram` returns `diagramly.status: "created"`, return the standard local report and include the Diagramly.ai `PreviewUrl`.
-6. If `create_diagramly_diagram` returns `diagramly.status: "authorization_required"`, first return the standard local report with `htmlPath`, `svgPath`, and `pngPath`, then ask whether the user wants to create a `https://diagramly.ai` online diagram for long-term storage and sharing.
-   1. If the user confirms, call the `start_diagramly_auth` tool, show the returned `diagramly.loginUrl` (for example, `https://diagramly.ai/auth/device?code=ABCD-2345`), and immediately call the `complete_diagramly_auth` tool, waiting until it returns `diagramly.status: "authorized"` (user authorization succeeded) or reports an error/expiration.
-   2. After authorization succeeds, call `create_diagramly_diagram` again with the same diagram source, then return a complete report again with `htmlPath`, `svgPath`, `pngPath`, and the Diagramly.ai `PreviewUrl`.
+## Local renderer
 
-## Local draw CLI
+The packaged draw CLI is the required local renderer. It validates Mermaid before writing files, renders SVG/HTML, exports PNG by default, and returns one JSON object on stdout. Do not install Mermaid, `mermaid-core`, `@mermaid-js/mermaid-cli`, or other rendering dependencies dynamically.
 
-Use the plugin-bundled draw CLI for local validation and rendering. Do not install Mermaid, `mermaid-core`, `@mermaid-js/mermaid-cli`, or other rendering dependencies dynamically.
+Resolve the installed CLI path before invoking it. Do not assume the shell's current working directory is this skill directory. Search in this order:
 
-Resolve the installed draw CLI path before invoking it. Do not assume the shell's current working directory is this skill directory.
+1. `$CLAUDE_PLUGIN_ROOT/skills/draw/scripts/draw.js`, when `CLAUDE_PLUGIN_ROOT` is set.
+2. `plugins/skills/draw/scripts/draw.js` under the current repository, when working from the source tree.
+3. The installed Codex plugin cache, such as `~/.codex/plugins/cache` or `~/.codex/.tmp/marketplaces`.
 
-```bash
-DRAW_CLI="${CLAUDE_PLUGIN_ROOT:+$CLAUDE_PLUGIN_ROOT/skills/draw/scripts/draw.js}"
-if [ -z "$DRAW_CLI" ] || [ ! -f "$DRAW_CLI" ]; then
-  DRAW_CLI="$PWD/plugins/skills/draw/scripts/draw.js"
-fi
-if [ -z "$DRAW_CLI" ] || [ ! -f "$DRAW_CLI" ]; then
-  DRAW_CLI="$(find "$HOME/.codex/plugins/cache" "$HOME/.codex/.tmp/marketplaces" -path "*/skills/draw/scripts/draw.js" -type f 2>/dev/null | sort | tail -n 1)"
-fi
-if [ -z "$DRAW_CLI" ] || [ ! -f "$DRAW_CLI" ]; then
-  echo "diagram draw CLI not found in the installed plugin payload." >&2
-  exit 1
-fi
-node "$DRAW_CLI"
-```
+If the packaged draw CLI or runtime is missing, report the packaging error directly and stop. If a plugin tool reports a runtime or startup failure, stop and surface that error clearly instead of exploring the repo.
 
-Send one JSON object on stdin. The command has no arguments and always returns one JSON object on stdout. Omit `outputDir` for normal use; the renderer writes outputs under its default temp root (`/tmp/dv/<renderId>` on non-Windows platforms, or the OS temp directory on Windows). Only set `outputDir` when the user explicitly asks for a custom local output location.
+Invoke the CLI with no command-line arguments and send one JSON object on stdin. Omit `outputDir` for normal use; the renderer writes outputs under its default temp root (`/tmp/dv/<renderId>` on non-Windows platforms, or the OS temp directory on Windows). Only set `outputDir` when the user explicitly asks for a custom local output location.
 
 Input shape:
 
@@ -76,27 +59,45 @@ Output shape:
 }
 ```
 
-Do not skip validation unless the user explicitly asks for raw Mermaid only.
-Do not read repo source files or use ad hoc rendering commands as a fallback for normal diagram requests.
-If the packaged runtime is missing, report the packaging error directly and stop.
-If a plugin tool reports a runtime or startup failure, stop and surface that error clearly instead of exploring the repo.
-Do not narrate internal exploration during healthy runs.
-
-## Output rules
+## Local report contract
 
 - After a successful local render, if the draw CLI result includes `displayText`, reproduce that `displayText` verbatim in every answer that reports local results.
-- Always attempt Diagramly.ai creation after a successful local render by calling `create_diagramly_diagram`.
-- If Diagramly.ai creation succeeds with a cached token, include the resulting `PreviewUrl` in the final answer.
-- If Diagramly.ai creation returns `authorization_required`, do not block or replace the local report. Ask whether the user wants a `https://diagramly.ai` online diagram for long-term storage and sharing before starting authorization.
-- Use this draw field order inside the boxed summary every time: `Status`, `Diagram Type`, `HTML Path`, `SVG Path`, `PNG Path`.
+- Use this field order inside the boxed summary every time: `Status`, `Diagram Type`, `HTML Path`, `SVG Path`, `PNG Path`.
 - Do not collapse multiple resources onto one line.
 - Use `n/a` for unavailable fields instead of omitting them.
 - Assume PNG export is on by default unless the caller explicitly disables it.
-- Treat a Diagramly.ai authorization URL as an intermediate state after the user confirms they want the online diagram. Do not stop after returning it; wait with `complete_diagramly_auth` until authorization is confirmed, then retry `create_diagramly_diagram` to create the final Diagramly.ai diagram preview URL.
-- If extra explanation is needed, put it after the block.
-- If rendering fails, explain the first meaningful validation or render error and try at most one repair pass.
+- Append diagnostics after the boxed summary only when present; do not put `Diagnostics` inside the box.
+- If extra explanation is needed, put it after the boxed summary.
+- If rendering fails after one repair pass, explain the first meaningful validation or render error.
 
-## Diagram drafting guidance
+Do not narrate internal exploration during healthy runs. Do not read repo source files or use ad hoc rendering commands as a fallback for normal diagram requests.
+
+## Optional Diagramly.ai upload
+
+Use the Diagramly.ai MCP tools only for optional cloud upload. They do not validate or render the local diagram; they upload the already-rendered Mermaid source to `https://diagramly.ai` so the user can save or share an online preview.
+
+- `create_diagramly_diagram`: creates the Diagramly.ai online diagram from Mermaid source when a cached token is available, or returns `diagramly.status: "authorization_required"` when sign-in is needed.
+- `start_diagramly_auth`: starts Diagramly.ai device authorization and returns `diagramly.loginUrl`.
+- `complete_diagramly_auth`: waits for the pending device authorization to complete.
+
+Upload flow:
+
+1. Call `create_diagramly_diagram` only after local rendering succeeds and the user asks for or confirms online upload.
+2. If it returns `diagramly.status: "created"`, include the Diagramly.ai `PreviewUrl` with the local report.
+3. If it returns `diagramly.status: "authorization_required"`, keep the local report intact, call `start_diagramly_auth`, show the returned `diagramly.loginUrl`, then call `complete_diagramly_auth`.
+4. If `complete_diagramly_auth` returns `diagramly.status: "authorized"`, retry `create_diagramly_diagram` with the same Mermaid source and include the final `PreviewUrl`.
+5. If authorization expires or fails, report that Diagramly.ai upload did not complete; do not treat the local render as failed.
+
+## Diagram type selection
+
+- Use `zenuml` by default for sequence diagrams, API calls, request/response chains, service interactions, and other interaction flows unless the user explicitly asks for Mermaid's native `sequenceDiagram` syntax.
+- Use `sequenceDiagram` only when the user explicitly requests it or provides existing `sequenceDiagram` source that should be preserved.
+- Use `flowchart` for process flow, branching logic, decision trees, business workflows, onboarding, or procedural steps.
+- Use `classDiagram` for entities, classes, schemas, properties, methods, and relationships.
+- Use `stateDiagram-v2` for lifecycle, order states, job states, approval states, status transitions, or finite state behavior.
+- Use other Mermaid diagram types when the request clearly fits them, including `erDiagram`, `journey`, `gantt`, `gitGraph`, `mindmap`, `timeline`, `architecture`, `kanban`, `packet`, `quadrantChart`, `xychart`, `sankey`, `venn`, `ishikawa`, `block`, `treemap`, `treeView-beta`, `wardley-beta`, and the `C4*` family.
+
+## Drafting guidance
 
 - Keep labels short and readable.
 - Use stable node and state names instead of long prose.
@@ -106,15 +107,8 @@ Do not narrate internal exploration during healthy runs.
 - Prefer `zenuml` when the interaction includes nested calls, branching, loops, or code-like control flow.
 - When the selected diagram type is `zenuml`, use the dedicated `zenuml` skill for syntax, examples, and drafting patterns.
 
-## User intent heuristics
+## Existing Mermaid
 
-- Requests about API calls, request/response chains, or service interactions usually map to `zenuml` unless the user explicitly asks for `sequenceDiagram`.
-- Requests about business processes, onboarding, or execution steps usually map to `flowchart`.
-- Requests about domain models, schemas, or object relationships usually map to `classDiagram`.
-- Requests about order states, job states, approval states, or lifecycle changes usually map to `stateDiagram-v2`.
-
-## If the user provides Mermaid already
-
-- Preserve their chosen diagram type unless it is clearly wrong.
+- Preserve the user's chosen diagram type unless it is clearly wrong.
 - Validate first by running the draw CLI.
 - If invalid, make the smallest viable fix before rendering.

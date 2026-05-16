@@ -1,1 +1,1 @@
-export const RENDERER_PROTOCOL_VERSION = 1;
+export const RENDERER_PROTOCOL_VERSION = 1

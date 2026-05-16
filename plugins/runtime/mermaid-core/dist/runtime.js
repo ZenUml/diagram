@@ -76,9 +76,7 @@ export async function runRenderer(args) {
         resolve()
         return
       }
-      reject(
-        new Error(stderr.trim() || `Renderer exited with code ${code ?? "unknown"} while rendering Mermaid.`)
-      )
+      reject(new Error(stderr.trim() || `Renderer exited with code ${code ?? "unknown"} while rendering Mermaid.`))
     })
   })
 }
@@ -113,8 +111,8 @@ async function resolveBrowserExecutable() {
   return undefined
 }
 function windowsBrowserCandidates() {
-  const roots = [process.env.PROGRAMFILES, process.env["PROGRAMFILES(X86)"], process.env.LOCALAPPDATA].filter(
-    (value) => Boolean(value)
+  const roots = [process.env.PROGRAMFILES, process.env["PROGRAMFILES(X86)"], process.env.LOCALAPPDATA].filter((value) =>
+    Boolean(value),
   )
   return roots.flatMap((root) => [
     path.join(root, "Google", "Chrome", "Application", "chrome.exe"),
