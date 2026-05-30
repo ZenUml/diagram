@@ -90,12 +90,17 @@ Upload flow:
 
 ## Diagram type selection
 
-- Use `zenuml` by default for sequence diagrams, API calls, request/response chains, service interactions, and other interaction flows unless the user explicitly asks for Mermaid's native `sequenceDiagram` syntax.
-- Use `sequenceDiagram` only when the user explicitly requests it or provides existing `sequenceDiagram` source that should be preserved.
-- Use `flowchart` for process flow, branching logic, decision trees, business workflows, onboarding, or procedural steps.
-- Use `classDiagram` for entities, classes, schemas, properties, methods, and relationships.
-- Use `stateDiagram-v2` for lifecycle, order states, job states, approval states, status transitions, or finite state behavior.
-- Use other Mermaid diagram types when the request clearly fits them, including `erDiagram`, `journey`, `gantt`, `gitGraph`, `mindmap`, `timeline`, `architecture`, `kanban`, `packet`, `quadrantChart`, `xychart`, `sankey`, `venn`, `ishikawa`, `block`, `treemap`, `treeView-beta`, `wardley-beta`, and the `C4*` family.
+Default to `zenuml` for sequence and interaction flows unless the user explicitly asks for Mermaid native `sequenceDiagram` syntax.
+
+| Request signals | Diagram type | Notes |
+|---|---|---|
+| Sequence, API calls, request/response chains, service interactions, nested calls, branching, loops | `zenuml` | Default for interactions. Use the `zenuml` skill for syntax. |
+| User explicitly asks for native sequence syntax, or supplies existing `sequenceDiagram` source | `sequenceDiagram` | Preserve the provided source. |
+| Process flow, branching logic, decision trees, workflows, onboarding, procedures | `flowchart` | See [references/flowchart.md](references/flowchart.md). |
+| System components, services, data stores, deployment, network topology | `flowchart` (LR/TD) with subgraphs | The architecture workhorse. See [references/architecture.md](references/architecture.md). `architecture-beta` is an option for simple service maps. |
+| Entities, classes, schemas, properties, methods, relationships | `classDiagram` | |
+| Lifecycle, order/job/approval states, status transitions, finite-state behavior | `stateDiagram-v2` | |
+| Other clear fits | `erDiagram`, `journey`, `gantt`, `gitGraph`, `mindmap`, `timeline`, `architecture`, `kanban`, `packet`, `quadrantChart`, `xychart`, `sankey`, `venn`, `ishikawa`, `block`, `treemap`, `treeView-beta`, `wardley-beta`, `C4*` | Use when the request clearly fits. |
 
 ## Drafting guidance
 
@@ -106,6 +111,45 @@ Upload flow:
 - For `zenuml` and `sequenceDiagram`, define participants clearly before complex interactions.
 - Prefer `zenuml` when the interaction includes nested calls, branching, loops, or code-like control flow.
 - When the selected diagram type is `zenuml`, use the dedicated `zenuml` skill for syntax, examples, and drafting patterns.
+
+## Type-specific drafting references
+
+Before laying out these types, read the matching reference for Mermaid-idiom layout patterns:
+
+- Architecture and system diagrams -> [references/architecture.md](references/architecture.md)
+- Flowcharts -> [references/flowchart.md](references/flowchart.md)
+- `zenuml` interactions -> use the dedicated `zenuml` skill
+
+## Semantic styling
+
+Apply a consistent role-based palette so diagrams read intentionally instead of falling back to default Mermaid colors. These classes work for the node-bearing types that support `classDef` and `:::` (`flowchart`/`graph`, `stateDiagram-v2`, `classDiagram`, `erDiagram`). They set fill, stroke, and text color explicitly, so they are theme-independent and stay legible on any theme; pair with `theme: "dark"` for the most cohesive look.
+
+Color by role, not by technology:
+
+| Class | Role | classDef |
+|---|---|---|
+| `frontend` | Frontend, user-facing, inputs | `classDef frontend fill:#083344,stroke:#22d3ee,stroke-width:1.5px,color:#e2e8f0;` |
+| `backend` | Backend, services, processing | `classDef backend fill:#064e3b,stroke:#34d399,stroke-width:1.5px,color:#e2e8f0;` |
+| `db` | Database, storage, persistence | `classDef db fill:#4c1d95,stroke:#a78bfa,stroke-width:1.5px,color:#e2e8f0;` |
+| `infra` | Cloud, infrastructure, regions | `classDef infra fill:#78350f,stroke:#fbbf24,stroke-width:1.5px,color:#e2e8f0;` |
+| `alert` | Security, errors, warnings | `classDef alert fill:#881337,stroke:#fb7185,stroke-width:1.5px,color:#e2e8f0;` |
+| `connector` | Buses, queues, middleware | `classDef connector fill:#7c2d12,stroke:#fb923c,stroke-width:1.5px,color:#e2e8f0;` |
+| `external` | External, generic, unknown | `classDef external fill:#1e293b,stroke:#94a3b8,stroke-width:1.5px,color:#e2e8f0;` |
+| `highlight` | Active state, focus, current step | `classDef highlight fill:#1e3a8a,stroke:#60a5fa,stroke-width:1.5px,color:#e2e8f0;` |
+
+Usage:
+
+- Declare only the classes you actually use, then tag nodes with `:::class`.
+- For region boundaries, style the subgraph: `style <subgraphId> fill:#0b1220,stroke:#fbbf24,color:#e2e8f0`.
+- Keep styling optional and light; do not add classes that carry no meaning.
+
+```mermaid
+flowchart LR
+  classDef frontend fill:#083344,stroke:#22d3ee,stroke-width:1.5px,color:#e2e8f0;
+  classDef backend fill:#064e3b,stroke:#34d399,stroke-width:1.5px,color:#e2e8f0;
+  classDef db fill:#4c1d95,stroke:#a78bfa,stroke-width:1.5px,color:#e2e8f0;
+  Web[Web App]:::frontend --> API[API Service]:::backend --> DB[(PostgreSQL)]:::db
+```
 
 ## Existing Mermaid
 
